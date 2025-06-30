@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Bot, Shield, MessageSquare, BarChart3 } from "lucide-react";
@@ -52,7 +51,7 @@ const Index = () => {
             </CardHeader>
             <CardContent className="text-center">
               <Button asChild className="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800">
-                <Link to="/admin">Access Admin</Link>
+                <Link to="/admin-login">Admin Login</Link>
               </Button>
             </CardContent>
           </Card>

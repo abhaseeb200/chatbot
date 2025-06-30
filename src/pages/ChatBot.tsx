@@ -1,15 +1,15 @@
 
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { Avatar, AvatarContent, AvatarFallback } from "@/components/ui/avatar";
-import { Bot, Send, User, ArrowLeft, Loader2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Bot, User, Send, ArrowLeft, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface Message {
-  id: string;
-  content: string;
+  id: number;
+  text: string;
   sender: 'user' | 'bot';
   timestamp: Date;
 }
@@ -17,62 +17,52 @@ interface Message {
 const ChatBot = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
-      id: '1',
-      content: 'Hello! I\'m your AI assistant. How can I help you today?',
+      id: 1,
+      text: "Hello! I'm your AI assistant. How can I help you today?",
       sender: 'bot',
       timestamp: new Date()
     }
   ]);
-  const [inputValue, setInputValue] = useState('');
+  const [inputMessage, setInputMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const [showBuffer, setShowBuffer] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+  const [isBuffering, setIsBuffering] = useState(false);
 
   const handleSendMessage = async () => {
-    if (!inputValue.trim()) return;
+    if (!inputMessage.trim()) return;
 
     const userMessage: Message = {
-      id: Date.now().toString(),
-      content: inputValue,
+      id: messages.length + 1,
+      text: inputMessage,
       sender: 'user',
       timestamp: new Date()
     };
 
     setMessages(prev => [...prev, userMessage]);
-    setInputValue('');
-    setShowBuffer(true);
-    setIsTyping(true);
+    setInputMessage("");
+    setIsBuffering(true);
 
     // Simulate buffer processing time
     setTimeout(() => {
-      setShowBuffer(false);
+      setIsBuffering(false);
+      setIsTyping(true);
       
-      // Simulate bot response
+      // Simulate bot response delay
       setTimeout(() => {
-        const botMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          content: `I received your message: "${userMessage.content}". This is a simulated response from the AI chatbot. The buffer processing has completed successfully!`,
+        const botResponse: Message = {
+          id: messages.length + 2,
+          text: "I understand your message. Let me help you with that. This is a simulated response from the AI chatbot.",
           sender: 'bot',
           timestamp: new Date()
         };
-        setMessages(prev => [...prev, botMessage]);
+        
+        setMessages(prev => [...prev, botResponse]);
         setIsTyping(false);
-      }, 1000);
+      }, 1500);
     }, 2000);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
+    if (e.key === 'Enter') {
       handleSendMessage();
     }
   };
@@ -95,10 +85,8 @@ const ChatBot = () => {
                   <Bot className="h-6 w-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-semibold">AI Assistant</h1>
-                  <p className="text-sm text-gray-500">
-                    {isTyping ? 'Typing...' : 'Online'}
-                  </p>
+                  <h1 className="text-xl font-bold">AI Chatbot</h1>
+                  <p className="text-sm text-gray-600">Online • Ready to help</p>
                 </div>
               </div>
             </div>
@@ -111,94 +99,93 @@ const ChatBot = () => {
 
       {/* Chat Container */}
       <div className="container mx-auto px-4 py-6 max-w-4xl">
-        <Card className="h-[600px] flex flex-col shadow-lg">
+        <Card className="h-[600px] flex flex-col">
+          <CardHeader className="flex-shrink-0">
+            <CardTitle className="flex items-center justify-between">
+              <span>Chat Session</span>
+              {isBuffering && (
+                <div className="flex items-center space-x-2 text-yellow-600">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="text-sm">Processing buffer...</span>
+                </div>
+              )}
+            </CardTitle>
+          </CardHeader>
+          
           {/* Messages Area */}
-          <div className="flex-1 p-6 overflow-y-auto space-y-4">
+          <CardContent className="flex-1 overflow-y-auto space-y-4 p-4">
             {messages.map((message) => (
               <div
                 key={message.id}
-                className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                className={`flex items-start space-x-3 ${
+                  message.sender === 'user' ? 'justify-end' : 'justify-start'
+                }`}
               >
-                <div className={`flex max-w-xs lg:max-w-md ${message.sender === 'user' ? 'flex-row-reverse' : 'flex-row'} items-end space-x-2`}>
+                {message.sender === 'bot' && (
                   <Avatar className="h-8 w-8">
-                    <AvatarFallback className={message.sender === 'bot' ? 'bg-blue-100' : 'bg-gray-100'}>
-                      {message.sender === 'bot' ? <Bot className="h-4 w-4 text-blue-600" /> : <User className="h-4 w-4" />}
+                    <AvatarFallback className="bg-blue-100">
+                      <Bot className="h-4 w-4 text-blue-600" />
                     </AvatarFallback>
                   </Avatar>
-                  <div className={`px-4 py-2 rounded-lg ${
-                    message.sender === 'user' 
-                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white' 
+                )}
+                
+                <div
+                  className={`max-w-[70%] p-3 rounded-lg ${
+                    message.sender === 'user'
+                      ? 'bg-blue-600 text-white ml-auto'
                       : 'bg-gray-100 text-gray-800'
-                  }`}>
-                    <p className="text-sm">{message.content}</p>
-                    <p className={`text-xs mt-1 ${message.sender === 'user' ? 'text-blue-100' : 'text-gray-500'}`}>
-                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </p>
-                  </div>
+                  }`}
+                >
+                  <p className="text-sm">{message.text}</p>
+                  <p className="text-xs mt-1 opacity-70">
+                    {message.timestamp.toLocaleTimeString()}
+                  </p>
                 </div>
+                
+                {message.sender === 'user' && (
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className="bg-gray-100">
+                      <User className="h-4 w-4" />
+                    </AvatarFallback>
+                  </Avatar>
+                )}
               </div>
             ))}
-
-            {/* Buffer Indicator */}
-            {showBuffer && (
-              <div className="flex justify-start">
-                <div className="flex items-end space-x-2">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-blue-100">
-                      <Bot className="h-4 w-4 text-blue-600" />
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="bg-yellow-100 border border-yellow-300 px-4 py-2 rounded-lg">
-                    <div className="flex items-center space-x-2">
-                      <Loader2 className="h-4 w-4 animate-spin text-yellow-600" />
-                      <p className="text-sm text-yellow-800">Processing in buffer...</p>
-                    </div>
-                    <div className="mt-2 w-32 bg-yellow-200 rounded-full h-2">
-                      <div className="bg-yellow-500 h-2 rounded-full animate-pulse" style={{ width: '70%' }}></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
+            
             {/* Typing Indicator */}
-            {isTyping && !showBuffer && (
-              <div className="flex justify-start">
-                <div className="flex items-end space-x-2">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-blue-100">
-                      <Bot className="h-4 w-4 text-blue-600" />
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="bg-gray-100 px-4 py-2 rounded-lg">
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                    </div>
+            {isTyping && (
+              <div className="flex items-start space-x-3">
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback className="bg-blue-100">
+                    <Bot className="h-4 w-4 text-blue-600" />
+                  </AvatarFallback>
+                </Avatar>
+                <div className="bg-gray-100 p-3 rounded-lg">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                   </div>
                 </div>
               </div>
             )}
-            <div ref={messagesEndRef} />
-          </div>
-
+          </CardContent>
+          
           {/* Input Area */}
-          <div className="border-t p-4">
+          <div className="flex-shrink-0 p-4 border-t">
             <div className="flex space-x-2">
               <Input
-                ref={inputRef}
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Type your message..."
-                disabled={isTyping}
+                disabled={isBuffering || isTyping}
                 className="flex-1"
               />
-              <Button 
+              <Button
                 onClick={handleSendMessage}
-                disabled={!inputValue.trim() || isTyping}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                disabled={!inputMessage.trim() || isBuffering || isTyping}
+                size="icon"
               >
                 <Send className="h-4 w-4" />
               </Button>

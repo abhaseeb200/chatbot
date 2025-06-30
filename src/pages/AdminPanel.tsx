@@ -1,10 +1,11 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarContent, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { 
   BarChart3, 
   Users, 
@@ -15,14 +16,34 @@ import {
   Bot,
   Clock,
   TrendingUp,
-  AlertCircle
+  AlertCircle,
+  Upload,
+  FileJson,
+  History
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const AdminPanel = () => {
   const [activeTab, setActiveTab] = useState("overview");
+  const [uploadedFiles, setUploadedFiles] = useState([
+    { id: 1, name: "chatbot_config.json", uploadedAt: "2024-01-15 10:30", size: "2.3 KB" },
+    { id: 2, name: "user_intents.json", uploadedAt: "2024-01-14 15:45", size: "5.1 KB" },
+    { id: 3, name: "responses.json", uploadedAt: "2024-01-13 09:20", size: "8.7 KB" },
+  ]);
 
-  // Mock data for demonstration
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && file.type === "application/json") {
+      const newFile = {
+        id: uploadedFiles.length + 1,
+        name: file.name,
+        uploadedAt: new Date().toLocaleString(),
+        size: `${(file.size / 1024).toFixed(1)} KB`
+      };
+      setUploadedFiles(prev => [newFile, ...prev]);
+    }
+  };
+
   const chatSessions = [
     { id: 1, user: "John Doe", messages: 15, duration: "12m", status: "active", lastMessage: "2 min ago" },
     { id: 2, user: "Jane Smith", messages: 8, duration: "8m", status: "completed", lastMessage: "5 min ago" },
@@ -75,8 +96,9 @@ const AdminPanel = () => {
 
       <div className="container mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="json-manager">JSON Manager</TabsTrigger>
             <TabsTrigger value="sessions">Live Sessions</TabsTrigger>
             <TabsTrigger value="messages">Messages</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
@@ -192,6 +214,62 @@ const AdminPanel = () => {
                       <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                       <span className="text-sm text-green-600">Online</span>
                     </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="json-manager" className="space-y-6">
+            <div className="grid gap-6 md:grid-cols-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Upload className="h-5 w-5" />
+                    <span>Upload JSON File</span>
+                  </CardTitle>
+                  <CardDescription>Upload configuration files for the chatbot</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="json-upload">Select JSON File</Label>
+                    <Input
+                      id="json-upload"
+                      type="file"
+                      accept=".json"
+                      onChange={handleFileUpload}
+                      className="cursor-pointer"
+                    />
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    <p>Supported formats: JSON files only</p>
+                    <p>Maximum file size: 10MB</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <History className="h-5 w-5" />
+                    <span>Upload History</span>
+                  </CardTitle>
+                  <CardDescription>Recently uploaded JSON files</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3 max-h-64 overflow-y-auto">
+                    {uploadedFiles.map((file) => (
+                      <div key={file.id} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <FileJson className="h-5 w-5 text-blue-600" />
+                          <div>
+                            <p className="text-sm font-medium">{file.name}</p>
+                            <p className="text-xs text-gray-500">{file.uploadedAt} • {file.size}</p>
+                          </div>
+                        </div>
+                        <Button size="sm" variant="outline">View</Button>
+                      </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
