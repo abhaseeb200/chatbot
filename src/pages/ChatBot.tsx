@@ -38,27 +38,61 @@ const ChatBot = () => {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentPrompt = inputMessage;
     setInputMessage("");
     setIsBuffering(true);
 
-    // Simulate buffer processing time
-    setTimeout(() => {
+    try {
+      // Call the API
+      const response = await fetch('http://127.0.0.1:8000/api/chat/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: currentPrompt
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
       setIsBuffering(false);
       setIsTyping(true);
-      
-      // Simulate bot response delay
+
+      // Simulate typing delay
       setTimeout(() => {
         const botResponse: Message = {
           id: messages.length + 2,
-          text: "I understand your message. Let me help you with that. This is a simulated response from the AI chatbot.",
+          text: data.response || "I apologize, but I couldn't process your request at the moment.",
           sender: 'bot',
           timestamp: new Date()
         };
         
         setMessages(prev => [...prev, botResponse]);
         setIsTyping(false);
-      }, 1500);
-    }, 2000);
+      }, 1000);
+
+    } catch (error) {
+      console.error('Error calling chat API:', error);
+      setIsBuffering(false);
+      setIsTyping(true);
+
+      setTimeout(() => {
+        const errorResponse: Message = {
+          id: messages.length + 2,
+          text: "I'm sorry, I'm having trouble connecting to the server. Please try again later.",
+          sender: 'bot',
+          timestamp: new Date()
+        };
+        
+        setMessages(prev => [...prev, errorResponse]);
+        setIsTyping(false);
+      }, 1000);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

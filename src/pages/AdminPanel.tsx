@@ -19,9 +19,10 @@ import {
   AlertCircle,
   Upload,
   FileJson,
-  History
+  History,
+  LogOut
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const AdminPanel = () => {
   const [activeTab, setActiveTab] = useState("overview");
@@ -30,6 +31,8 @@ const AdminPanel = () => {
     { id: 2, name: "user_intents.json", uploadedAt: "2024-01-14 15:45", size: "5.1 KB" },
     { id: 3, name: "responses.json", uploadedAt: "2024-01-13 09:20", size: "8.7 KB" },
   ]);
+
+  const navigate = useNavigate();
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -42,6 +45,11 @@ const AdminPanel = () => {
       };
       setUploadedFiles(prev => [newFile, ...prev]);
     }
+  };
+
+  const handleLogout = () => {
+    // Simple logout - in a real app, you'd clear authentication tokens
+    navigate("/admin-login");
   };
 
   const chatSessions = [
@@ -87,9 +95,15 @@ const AdminPanel = () => {
                 <p className="text-gray-600">Monitor and manage chat sessions</p>
               </div>
             </div>
-            <Button asChild>
-              <Link to="/chat">Go to Chat</Link>
-            </Button>
+            <div className="flex items-center space-x-3">
+              <Button asChild>
+                <Link to="/chat">Go to Chat</Link>
+              </Button>
+              <Button variant="outline" onClick={handleLogout}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
+            </div>
           </div>
         </div>
       </div>
